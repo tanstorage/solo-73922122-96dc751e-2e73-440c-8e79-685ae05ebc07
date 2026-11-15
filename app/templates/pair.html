@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% set active_tab = "pair" %}
+{% block title %}批次样本配对 · VCF 变异核对{% endblock %}
+{% block heading %}批次样本配对{% endblock %}
+{% block subtitle %}怀疑两批测序结果的样本标签互换时，用共有双等位 SNP 的基因型核对样本身份{% endblock %}
+{% block body %}
+{% if error %}
+<div class="alert error">
+  配对分析失败：{{ error }}<br>
+  <span style="font-weight:400;font-size:13.5px">按要求本次不展示任何局部映射，请修正输入后重新上传。</span>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>上传文件</h2>
+  <form action="/pair" method="post" enctype="multipart/form-data">
+    <label class="field">
+      单条染色体参考 FASTA
+      <span class="hint">（纯 A/C/G/T，不超过 {{ fasta_limit_kib }} KiB）</span>
+      <input type="file" name="fasta" accept=".fa,.fasta,.fna,text/plain" required>
+    </label>
+    <label class="field">
+      批次 A 多样本 VCF
+      <span class="hint">（1–{{ max_samples }} 个样本，不超过 {{ vcf_limit_kib }} KiB）</span>
+      <input type="file" name="vcf_a" accept=".vcf,text/plain" required>
+    </label>
+    <label class="field">
+      批次 B 多样本 VCF
+      <span class="hint">（1–{{ max_samples }} 个样本，不超过 {{ vcf_limit_kib }} KiB）</span>
+      <input type="file" name="vcf_b" accept=".vcf,text/plain" required>
+    </label>
+    <button type="submit">开始配对</button>
+  </form>
+</div>
+
+<div class="card rules">
+  <h2 style="color:var(--ink)">配对的判定规则</h2>
+  <ul>
+    <li>两份 VCF 各含 <strong>1–{{ max_samples }} 个样本</strong>，各不超过 {{ vcf_limit_kib }} KiB；参考为同一条染色体。</li>
+    <li>只使用<strong>两侧都出现</strong>、REF 与参考相符、ALT 相同且为<strong>双等位单碱基</strong>的位点；
+        indel、MNV、多 ALT、符号化 ALT 等记录不参与配对。</li>
+    <li>GT 仅接受未分相的 <span class="mono">0/0</span>、<span class="mono">0/1</span>、<span class="mono">1/1</span>
+        与缺失调用 <span class="mono">./.</span>；<span class="mono">./.</span> 不计入可比位点。</li>
+    <li>两个样本至少 <strong>{{ min_comparable }} 个可比位点</strong>且不一致不超过
+        <strong>{{ max_inconsistent }} 处</strong>才可配对。</li>
+    <li>全局先<strong>最大化配对数</strong>，再<strong>最小化累计不一致位点数</strong>；
+        结果页会列出每个样本在<strong>所有最优方案</strong>中的可能对应对象（包含“未配对”）。</li>
+    <li>出现<strong>重复位点、非法 GT 或 REF 不符</strong>时整次分析失败，不展示任何部分映射。</li>
+  </ul>
+</div>
+{% endblock %}

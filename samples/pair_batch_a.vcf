@@ -1,0 +1,24 @@
+##fileformat=VCFv4.2
+##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	S1	S2	S3	S4
+chrDemo	2	.	C	A	.	PASS	.	GT	0/0	0/1	0/0	0/1
+chrDemo	8	.	T	A	.	PASS	.	GT	0/1	1/1	1/1	0/0
+chrDemo	14	.	A	C	.	PASS	.	GT	1/1	0/0	0/1	1/1
+chrDemo	20	.	A	C	.	PASS	.	GT	0/0	0/1	0/0	0/1
+chrDemo	26	.	G	A	.	PASS	.	GT	0/1	1/1	1/1	0/0
+chrDemo	32	.	G	A	.	PASS	.	GT	./.	0/0	0/1	1/1
+chrDemo	38	.	T	A	.	PASS	.	GT	./.	0/1	0/0	0/1
+chrDemo	44	.	T	A	.	PASS	.	GT	0/1	1/1	1/1	0/0
+chrDemo	50	.	C	A	.	PASS	.	GT	1/1	0/0	0/1	1/1
+chrDemo	56	.	A	C	.	PASS	.	GT	0/0	0/1	0/0	0/1
+chrDemo	62	.	G	A	.	PASS	.	GT	0/1	1/1	1/1	0/0
+chrDemo	68	.	C	A	.	PASS	.	GT	1/1	./.	0/1	1/1
+chrDemo	74	.	T	A	.	PASS	.	GT	0/0	./.	0/0	0/1
+chrDemo	80	.	A	C	.	PASS	.	GT	0/1	1/1	1/1	0/0
+chrDemo	86	.	A	C	.	PASS	.	GT	1/1	0/0	0/1	1/1
+chrDemo	92	.	G	A	.	PASS	.	GT	0/0	0/1	./.	0/1
+chrDemo	98	.	G	A	.	PASS	.	GT	0/1	1/1	./.	0/0
+chrDemo	104	.	T	A	.	PASS	.	GT	1/1	0/0	0/1	1/1
+chrDemo	110	.	T	A	.	PASS	.	GT	0/0	0/1	0/0	./.
+chrDemo	116	.	C	A	.	PASS	.	GT	0/1	1/1	1/1	./.
+chrDemo	60	.	T	TA	.	PASS	.	GT	0/1	0/1	0/1	0/1

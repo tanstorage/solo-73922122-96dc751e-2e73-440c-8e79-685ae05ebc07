@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% set active_tab = "pair" %}
+{% block title %}配对结果 · 批次样本配对{% endblock %}
+{% block heading %}批次样本配对结果{% endblock %}
+{% block subtitle %}基于共有双等位 SNP 的基因型，核对两批样本的身份对应关系{% endblock %}
+{% block body %}
+<div class="card">
+  <h2>配对概览</h2>
+  <div class="meta">
+    <span class="pill">参考：{{ result.reference_name }}（{{ result.reference_length }} bp）</span>
+    <span class="pill">批次 A：{{ result.samples_a|length }} 个样本</span>
+    <span class="pill">批次 B：{{ result.samples_b|length }} 个样本</span>
+    <span class="pill">共有 SNP 位点：{{ result.shared_sites|length }}</span>
+  </div>
+  <div class="summary">
+    <div class="stat">
+      <div class="num" style="color:var(--ok)">{{ result.max_pairs }}</div>
+      <div class="lbl">最多配对数（覆盖 {{ result.max_paired_samples }} 个样本）</div>
+    </div>
+    <div class="stat">
+      <div class="num" style="color:{{ 'var(--ok)' if result.min_inconsistent == 0 else 'var(--warn)' }}">{{ result.min_inconsistent }}</div>
+      <div class="lbl">最优方案的最小累计不一致位点</div>
+    </div>
+    <div class="stat">
+      <div class="num">{{ result.scheme_count }}</div>
+      <div class="lbl">达到上述最优的方案数</div>
+    </div>
+  </div>
+  <p class="note">
+    配对阈值：可比位点 ≥ {{ min_comparable }} 且不一致 ≤ {{ max_inconsistent }}；
+    全局目标为先最大化配对数，再最小化所有配对的累计不一致位点数。
+  </p>
+  <p><a class="back" href="/pair">← 返回重新上传</a></p>
+</div>
+
+{% if result.max_pairs == 0 %}
+<div class="warnbox">
+  没有任何一对样本同时满足“可比位点 ≥ {{ min_comparable }} 且不一致 ≤ {{ max_inconsistent }}”，
+  因此没有可用的配对方案。请确认两份 VCF 使用同一参考、同一条染色体并覆盖足够的共有 SNP。
+</div>
+{% endif %}
+
+{% macro pair_tags(comparable, inconsistent) %}
+<span class="tag tag-acc">可比位点 {{ comparable }}</span>
+<span class="tag {{ 'tag-ok' if inconsistent == 0 else 'tag-bad' }}">不一致位点 {{ inconsistent }}</span>
+{% endmacro %}
+
+{% macro counterpart_rows(poss, empty_text) %}
+{% if poss.counterparts %}
+<ul class="plain">
+  {% for c in poss.counterparts %}
+  <li>
+    <span class="mono">{{ c.sample }}</span>
+    {{ pair_tags(c.comparable, c.inconsistent) }}
+  </li>
+  {% endfor %}
+  {% if poss.unpaired_possible %}
+  <li><span class="muted">可能未配对（在其他最优方案中该样本不对应任何对象）</span></li>
+  {% endif %}
+</ul>
+{% else %}
+<div class="empty">
+  {% if poss.unpaired_possible %}在所有最优方案中都未配对：{{ empty_text }}{% else %}{{ empty_text }}{% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+<div class="card">
+  <h2>每个样本的可能对应对象<span class="section-badge b-ok">全部最优方案</span></h2>
+  <p class="note">
+    下表汇总每个原批次样本在<strong>所有</strong>最优方案中出现过的对应对象；
+    同一对象后的“可比 / 不一致”即该对样本之间逐位点的统计。
+    某样本若在某些最优方案中未配对，也会明确标出。
+  </p>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th style="width:110px">批次</th>
+          <th style="width:200px">原样本</th>
+          <th>可能的对应对象（可比位点 / 不一致位点）</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for poss in result.possibilities_a %}
+        <tr>
+          {% if loop.first %}<td class="mono" rowspan="{{ result.possibilities_a|length }}">A</td>{% endif %}
+          <td class="mono">{{ poss.sample }}</td>
+          <td>{{ counterpart_rows(poss, "与批次 B 的任何样本都无法配对。") }}</td>
+        </tr>
+        {% endfor %}
+        {% for poss in result.possibilities_b %}
+        <tr>
+          {% if loop.first %}<td class="mono" rowspan="{{ result.possibilities_b|length }}">B</td>{% endif %}
+          <td class="mono">{{ poss.sample }}</td>
+          <td>{{ counterpart_rows(poss, "与批次 A 的任何样本都无法配对。") }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h2>全部最优方案<span class="section-badge b-ok">{{ result.scheme_count }}</span></h2>
+  {% if result.schemes %}
+  {% for scheme in schemes %}
+  <details class="scheme" {% if loop.first %}open{% endif %}>
+    <summary>
+      方案 {{ loop.index }}：{{ scheme.pairs|length }} 对，累计不一致 {{ scheme.inconsistent }}
+    </summary>
+    {% if scheme.pairs %}
+    <ul class="plain">
+      {% for pair in scheme.pairs %}
+      <li>
+        批次 A <span class="mono">{{ pair.0 }}</span>
+        ↔ 批次 B <span class="mono">{{ pair.1 }}</span>
+        {% for s in result.pair_stats if s.a == pair.0 and s.b == pair.1 %}
+        {{ pair_tags(s.comparable, s.inconsistent) }}
+        {% endfor %}
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="empty">该方案中没有任何样本配对。</div>
+    {% endif %}
+  </details>
+  {% endfor %}
+  {% if schemes_truncated %}
+  <p class="note">方案过多，仅显示前 {{ scheme_limit }} 个；上方“可能对应对象”仍覆盖全部最优方案。</p>
+  {% endif %}
+  {% else %}
+  <div class="empty">没有最优方案。</div>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h2>全部候选组合（含不可配对）</h2>
+  <p class="note">列出每一组 A×B 组合的可比位点数与不一致位点数，便于人工复查阈值附近的组合。</p>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th>批次 A 样本</th>
+          <th>批次 B 样本</th>
+          <th>可比位点</th>
+          <th>不一致位点</th>
+          <th>可配对</th>
+          <th>出现在最优方案中</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in result.pair_stats %}
+        <tr>
+          <td class="mono">{{ s.a }}</td>
+          <td class="mono">{{ s.b }}</td>
+          <td class="{{ 'muted' if s.comparable < min_comparable else '' }}">{{ s.comparable }}</td>
+          <td class="{{ 'muted' if s.inconsistent == 0 else '' }}">{{ s.inconsistent }}</td>
+          <td>{% if s.eligible %}<span class="tag tag-ok">是</span>{% else %}<span class="tag tag-plain">否</span>{% endif %}</td>
+          <td>{% if s.in_optimal %}<span class="tag tag-acc">是</span>{% else %}<span class="tag tag-plain">否</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if result.shared_sites %}
+<div class="card">
+  <h2>共有 SNP 位点<span class="section-badge b-ok">{{ result.shared_sites|length }}</span></h2>
+  <p class="note">以下位点在两侧均出现、REF 与参考相符且 ALT 相同，且为双等位单碱基位点。</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th style="width:220px">位置</th><th>REF→ALT</th></tr></thead>
+      <tbody>
+        {% for site in result.shared_sites %}
+        <tr>
+          <td class="mono">{{ site.pos }}</td>
+          <td class="mono">{{ site.ref }}→{{ site.alt }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

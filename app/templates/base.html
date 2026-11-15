@@ -75,14 +75,36 @@
     .b-bad { background: var(--bad-soft); color: var(--bad); }
     .empty { color: var(--muted); padding: 14px 4px; }
     a.back { color: var(--accent); text-decoration: none; font-weight: 600; }
+    nav.tabs { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+    nav.tabs a {
+      display: inline-block; padding: 7px 14px; border-radius: 999px;
+      border: 1px solid var(--line); background: var(--card); color: var(--muted);
+      text-decoration: none; font-weight: 600; font-size: 14px;
+    }
+    nav.tabs a.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .tag-ok { background: var(--ok-soft); color: var(--ok); }
+    .tag-bad { background: var(--bad-soft); color: var(--bad); }
+    .tag-plain { background: #eef2f7; color: var(--muted); }
+    .tag-acc { background: var(--accent-soft); color: #1e40af; }
+    ul.plain { margin: 6px 0 0; padding-left: 20px; }
+    ul.plain li { margin: 4px 0; }
+    p.note { color: var(--muted); font-size: 13px; margin-top: 10px; }
+    details.scheme { border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; background: #fafbfc; }
+    details.scheme summary { cursor: pointer; font-weight: 600; }
+    .scroll { overflow-x: auto; }
+    .warnbox { background: var(--warn-soft); border: 1px solid #fcd34d; color: var(--warn); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-weight: 600; }
   </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>双 VCF 变异核对</h1>
-    <p>同一参考、同一样本，两套变异识别程序结果复查工具</p>
+    <h1>{% block heading %}双 VCF 变异核对{% endblock %}</h1>
+    <p>{% block subtitle %}同一参考、同一样本，两套变异识别程序结果复查工具{% endblock %}</p>
   </header>
+  <nav class="tabs">
+    <a href="/" class="{{ 'active' if active_tab == 'compare' else '' }}">双 VCF 变异核对</a>
+    <a href="/pair" class="{{ 'active' if active_tab == 'pair' else '' }}">批次样本配对</a>
+  </nav>
   {% block body %}{% endblock %}
 </div>
 </body>
