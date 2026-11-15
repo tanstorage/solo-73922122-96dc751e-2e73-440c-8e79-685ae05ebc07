@@ -1,0 +1,11 @@
+.git
+.venv
+.pylibs
+__pycache__/
+*.pyc
+tests/
+samples/
+scripts/
+*.md
+Dockerfile
+docker-compose.yml

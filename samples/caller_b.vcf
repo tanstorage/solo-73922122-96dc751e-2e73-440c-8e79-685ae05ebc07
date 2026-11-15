@@ -1,0 +1,9 @@
+##fileformat=VCFv4.2
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT	SAMPLE
+chrDemo	2	.	C	G	.	PASS	.	GT	0/1
+chrDemo	13	.	A	AA	.	PASS	.	GT	0/1
+chrDemo	38	.	TAT	T	.	PASS	.	GT	0/1
+chrDemo	31	.	G	A	.	PASS	.	GT	0/1
+chrDemo	28	.	T	C	.	PASS	.	GT:DP	0/1:40
+chrDemo	47	.	G	A	.	PASS	.	GT	0/1
+chrDemo	2	.	C	G	.	PASS	.	GT	0/0

@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}核对结果 · 双 VCF 变异核对{% endblock %}
+{% block body %}
+<div class="card">
+  <h2>核对概览</h2>
+  <div class="meta">
+    <span class="pill">参考：{{ ref_name }}（{{ ref_length }} bp）</span>
+    <span class="pill">VCF A 样本：{{ sample_a }}</span>
+    <span class="pill">VCF B 样本：{{ sample_b }}</span>
+  </div>
+  <div class="summary">
+    <div class="stat"><div class="num">{{ groups.consistent|length }}</div><div class="lbl">两侧一致（同变异同剂量）</div></div>
+    <div class="stat"><div class="num" style="color:var(--warn)">{{ groups.left_only|length + groups.right_only|length }}</div><div class="lbl">仅单侧出现（A {{ groups.left_only|length }} / B {{ groups.right_only|length }}）</div></div>
+    <div class="stat"><div class="num" style="color:var(--bad)">{{ groups.dosage_mismatch|length }}</div><div class="lbl">剂量不符</div></div>
+  </div>
+  <p><a class="back" href="/">← 返回重新上传</a></p>
+</div>
+
+{% macro call_cell(call) %}
+{% if call is none %}
+<span class="muted">—</span>
+{% else %}
+<span class="dose d{{ call.dosage }}">剂量 {{ call.dosage }}</span>
+<div class="raw">
+  原始行号：{{ call.line_numbers|join(", ") }}<br>
+  原始记录（POS:REF&gt;ALT）：{{ call.raw_descriptions|join("；") }}
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro table(rows, empty_text) %}
+{% if rows %}
+<table>
+  <thead>
+    <tr><th style="width:120px">类型</th><th style="width:200px">归一变异（位置:REF→ALT）</th><th>VCF A</th><th>VCF B</th></tr>
+  </thead>
+  <tbody>
+  {% for e in rows %}
+    <tr>
+      <td><span class="tag {{ e.variant.kind }}">{{ e.variant.kind }}</span></td>
+      <td class="mono">{{ e.variant.label }}</td>
+      <td>{{ call_cell(e.left) }}</td>
+      <td>{{ call_cell(e.right) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<div class="empty">{{ empty_text }}</div>
+{% endif %}
+{% endmacro %}
+
+<div class="card">
+  <h2>剂量不符（需优先复查）<span class="section-badge b-bad">{{ groups.dosage_mismatch|length }}</span></h2>
+  {{ table(groups.dosage_mismatch, "没有剂量不符的变异。") }}
+</div>
+
+<div class="card">
+  <h2>仅单侧出现（需复查）<span class="section-badge b-warn">{{ groups.left_only|length + groups.right_only|length }}</span></h2>
+  {{ table(groups.left_only + groups.right_only, "两侧变异集合相同，无单侧独有变异。") }}
+</div>
+
+<div class="card">
+  <h2>两侧一致<span class="section-badge b-ok">{{ groups.consistent|length }}</span></h2>
+  {{ table(groups.consistent, "没有一致的变异。") }}
+</div>
+{% endblock %}

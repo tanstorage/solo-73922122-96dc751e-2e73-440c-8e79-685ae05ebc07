@@ -1,0 +1,11 @@
+services:
+  vcf-check:
+    build: .
+    image: vcf-recheck:latest
+    container_name: vcf-recheck
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    read_only: true
+    security_opt:
+      - no-new-privileges:true

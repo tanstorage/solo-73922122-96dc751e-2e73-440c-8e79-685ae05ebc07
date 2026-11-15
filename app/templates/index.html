@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+{% if error %}
+<div class="alert error">
+  核对失败：{{ error }}<br>
+  <span style="font-weight:400;font-size:13.5px">按要求本次不展示任何局部结论，请修正输入后重新上传。</span>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>上传文件</h2>
+  <form action="/compare" method="post" enctype="multipart/form-data">
+    <label class="field">
+      单条染色体参考 FASTA
+      <span class="hint">（纯 A/C/G/T，不超过 {{ fasta_limit_kib }} KiB）</span>
+      <input type="file" name="fasta" accept=".fa,.fasta,.fna,text/plain" required>
+    </label>
+    <label class="field">
+      VCF A（第一份单样本 VCF）
+      <span class="hint">（不超过 {{ vcf_limit_kib }} KiB）</span>
+      <input type="file" name="vcf_a" accept=".vcf,text/plain" required>
+    </label>
+    <label class="field">
+      VCF B（第二份单样本 VCF）
+      <span class="hint">（不超过 {{ vcf_limit_kib }} KiB）</span>
+      <input type="file" name="vcf_b" accept=".vcf,text/plain" required>
+    </label>
+    <button type="submit">开始核对</button>
+  </form>
+</div>
+
+<div class="card rules">
+  <h2 style="color:var(--ink)">接收与判定规则</h2>
+  <ul>
+    <li>仅接受 A/C/G/T 构成的<strong>单碱基替换</strong>，以及事件长度不超过 20 bp 的<strong>纯插入 / 纯缺失</strong>；其他形态（MNV、符号化 ALT、* 等）直接判失败。</li>
+    <li>GT 必须为<strong>非缺失、未分相的二倍体</strong>（形如 <span class="mono">0/1</span>、<span class="mono">1/1</span>，多 ALT 可为 <span class="mono">1/2</span>）；按 GT 分别计算各 ALT 的 0/1/2 剂量，剂量为 0 的变异忽略。</li>
+    <li>插入、缺失对照参考做左对齐归一：重复区域中位置写法不同的同一 indel 归为同一等位变异。</li>
+    <li>REF 与参考序列不符，或同一文件内同一归一变异存在互相矛盾的剂量时，<strong>整次核对失败</strong>，不展示局部结论。</li>
+  </ul>
+</div>
+{% endblock %}
